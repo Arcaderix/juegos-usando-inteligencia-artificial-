@@ -1,0 +1,125 @@
+import random
+
+# Definición de los jugadores
+class Player:
+    def __init__(self, symbol):
+        self.symbol = symbol
+
+    def get_move(self, board):
+        pass
+
+# Definición del jugador humano
+class HumanPlayer(Player):
+    def get_move(self, board):
+        while True:
+            row = int(input("Ingrese el número de fila (0-2): "))
+            col = int(input("Ingrese el número de columna (0-2): "))
+            if board.is_valid_move(row, col):
+                return (row, col)
+            else:
+                print("Movimiento inválido. Inténtelo de nuevo.")
+
+# Definición del jugador de IA
+class AIPlayer(Player):
+    def __init__(self, symbol):
+        super().__init__(symbol)
+
+    def get_move(self, board):
+        _, move = self.minimax(board, self.symbol)
+        return move
+
+    def minimax(self, board, player_symbol):
+        if board.is_winner(self.symbol):
+            return 1, None
+        elif board.is_winner(board.get_opponent_symbol(self.symbol)):
+            return -1, None
+        elif board.is_full():
+            return 0, None
+
+        moves = []
+        for row in range(3):
+            for col in range(3):
+                if board.is_valid_move(row, col):
+                    board.make_move(row, col, player_symbol)
+                    score, _ = self.minimax(board, board.get_opponent_symbol(player_symbol))
+                    moves.append((score, (row, col)))
+                    board.undo_move(row, col)
+
+        if player_symbol == self.symbol:
+            best_score, best_move = max(moves)
+        else:
+            best_score, best_move = min(moves)
+
+        return best_score, best_move
+
+# Definición del tablero
+class Board:
+    def __init__(self):
+        self.grid = [[' ' for _ in range(3)] for _ in range(3)]
+
+    def print_board(self):
+        print("---------")
+        for row in self.grid:
+            print("|", end="")
+            for cell in row:
+                print(cell, end="|")
+            print("\n---------")
+
+    def is_valid_move(self, row, col):
+        return row >= 0 and row < 3 and col >= 0 and col < 3 and self.grid[row][col] == ' '
+
+    def make_move(self, row, col, symbol):
+        self.grid[row][col] = symbol
+
+    def undo_move(self, row, col):
+        self.grid[row][col] = ' '
+
+    def is_full(self):
+        for row in self.grid:
+            if ' ' in row:
+                return False
+        return True
+
+    def is_winner(self, symbol):
+        for row in self.grid:
+            if row.count(symbol) == 3:
+                return True
+
+        for col in range(3):
+            if self.grid[0][col] == self.grid[1][col] == self.grid[2][col] == symbol:
+                return True
+
+        if self.grid[0][0] == self.grid[1][1] == self.grid[2][2] == symbol:
+            return True
+
+        if self.grid[0][2] == self.grid[1][1] == self.grid[2][0] == symbol:
+            return True
+
+        return False
+
+    def get_opponent_symbol(self, symbol):
+        return 'X' if symbol == 'O' else 'O'
+
+# Función principal para jugar el juego
+def play_tic_tac_toe():
+    board = Board()
+    players = [HumanPlayer('X'), AIPlayer('O')]
+    current_player = random.choice(players)
+
+    while True:
+        print("Es el turno del jugador", current_player.symbol)
+        board.print_board()
+
+        move = current_player.get_move(board)
+        board.make_move(move[0], move[1], current_player.symbol)
+
+        if board.is_winner(current_player.symbol):
+            print("¡El jugador", current_player.symbol, "ha ganado!")
+            break
+        elif board.is_full():
+            print("¡Empate!")
+            break
+
+        current_player = players[1] if current_player == players[0] else players[0]
+
+play_tic_tac_toe()
