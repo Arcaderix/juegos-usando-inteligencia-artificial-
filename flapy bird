@@ -1,0 +1,129 @@
+import pygame
+import random
+
+# Configuración de la ventana
+ANCHO = 500
+ALTURA = 600
+FPS = 60
+
+pygame.init()
+ventana = pygame.display.set_mode((ANCHO, ALTURA))
+pygame.display.set_caption("Flappy Bird")
+reloj = pygame.time.Clock()
+
+# Colores
+BLANCO = (255, 255, 255)
+NEGRO = (0, 0, 0)
+
+# Variables del juego
+gravedad = 0.4
+impulso = -9
+puntuacion = 0
+
+# Cargar imágenes
+fondo = pygame.image.load("background.png").convert()
+base = pygame.image.load("base.png").convert()
+base = pygame.transform.scale(base, (ANCHO, 100))
+pajaro = pygame.image.load("bird.png").convert_alpha()
+tubo_superior = pygame.image.load("pipe_top.png").convert_alpha()
+tubo_inferior = pygame.image.load("pipe_bottom.png").convert_alpha()
+
+# Escalar imágenes
+pajaro = pygame.transform.scale(pajaro, (60, 45))
+tubo_superior = pygame.transform.scale(tubo_superior, (80, 400))
+tubo_inferior = pygame.transform.scale(tubo_inferior, (80, 400))
+
+# Clase del pájaro
+class Pajaro(pygame.sprite.Sprite):
+    def __init__(self):
+        super().__init__()
+        self.image = pajaro
+        self.rect = self.image.get_rect()
+        self.rect.center = (ANCHO // 2, ALTURA // 2)
+        self.velocidad = 0
+
+    def update(self):
+        self.velocidad += gravedad
+        self.rect.y += self.velocidad
+
+    def saltar(self):
+        self.velocidad = impulso
+
+# Clase de los tubos
+class Tubo(pygame.sprite.Sprite):
+    def __init__(self, x):
+        super().__init__()
+        self.image_superior = tubo_superior
+        self.image_inferior = tubo_inferior
+        self.rect_superior = self.image_superior.get_rect()
+        self.rect_inferior = self.image_inferior.get_rect()
+        self.rect_superior.midbottom = (x, random.randint(200, 400))
+        self.rect_inferior.midtop = (x, self.rect_superior.y - 180)
+        self.velocidad = 4
+
+    def update(self):
+        self.rect_superior.x -= self.velocidad
+        self.rect_inferior.x -= self.velocidad
+
+# Grupos de sprites
+todos_los_sprites = pygame.sprite.Group()
+tubos = pygame.sprite.Group()
+
+# Crear pájaro
+pajaro = Pajaro()
+todos_los_sprites.add(pajaro)
+
+# Bucle principal del juego
+while True:
+    reloj.tick(FPS)
+
+    # Eventos del juego
+    for evento in pygame.event.get():
+        if evento.type == pygame.QUIT:
+            pygame.quit()
+            quit()
+        elif evento.type == pygame.KEYDOWN:
+            if evento.key == pygame.K_SPACE:
+                pajaro.saltar()
+
+    # Actualizar elementos del juego
+    todos_los_sprites.update()
+
+    # Colisiones del pájaro con los tubos
+    colisiones = pygame.sprite.spritecollide(pajaro, tubos, False)
+    if colisiones:
+        pygame.quit()
+        quit()
+
+    # Generar nuevos tubos
+    if len(tubos) < 4:
+        tubo = Tubo(ANCHO + 200)
+        tubos.add(tubo)
+        todos_los_sprites.add(tubo)
+
+    # Eliminar tubos fuera de la pantalla
+    for tubo in tubos:
+        if tubo.rect_superior.right < 0:
+            tubos.remove(tubo)
+            todos_los_sprites.remove(tubo)
+            puntuacion += 1
+
+    # Dibujar elementos del juego
+    ventana.blit(fondo, (0, 0))
+
+    todos_los_sprites.draw(ventana)
+    tubos.draw(ventana)
+
+    ventana.blit(base, (0, ALTURA - 100))
+
+    # Mostrar puntuación en la pantalla
+    fuente = pygame.font.Font(None, 50)
+    texto_puntuacion = fuente.render(str(puntuacion), True, BLANCO)
+    ventana.blit(texto_puntuacion, (ANCHO // 2 - 20, 50))
+
+    # Actualizar la pantalla
+    pygame.display.update()
+
+#Asegúrate de tener los archivos de imagen (background.png, base.png, bird.png, pipe_top.png y pipe_bottom.png) en el mismo directorio que el script.
+
+#Este es un ejemplo básico y puedes personalizarlo añadiendo más elementos y características al juego, como efectos de sonido, animaciones y una interfaz de inicio y fin.
