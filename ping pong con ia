@@ -1,0 +1,87 @@
+import turtle
+import random
+
+# Configuración de la ventana
+ventana = turtle.Screen()
+ventana.title("Ping Pong")
+ventana.bgcolor("black")
+ventana.setup(width=800, height=600)
+ventana.tracer(0)
+
+# Raqueta del jugador
+jugador = turtle.Turtle()
+jugador.speed(0)
+jugador.shape("square")
+jugador.color("white")
+jugador.shapesize(stretch_wid=6, stretch_len=1)
+jugador.penup()
+jugador.goto(-350, 0)
+
+# Raqueta del oponente
+oponente = turtle.Turtle()
+oponente.speed(0)
+oponente.shape("square")
+oponente.color("white")
+oponente.shapesize(stretch_wid=6, stretch_len=1)
+oponente.penup()
+oponente.goto(350, 0)
+
+# Pelota
+pelota = turtle.Turtle()
+pelota.speed(40)
+pelota.shape("circle")
+pelota.color("white")
+pelota.penup()
+pelota.goto(0, 0)
+pelota.dx = 0.2
+pelota.dy = -0.2
+
+# Funciones de movimiento de las raquetas
+def mover_arriba():
+    y = jugador.ycor()
+    if y < 250:
+        y += 20
+    jugador.sety(y)
+
+def mover_abajo():
+    y = jugador.ycor()
+    if y > -240:
+        y -= 20
+    jugador.sety(y)
+
+# Controles del jugador
+ventana.listen()
+ventana.onkeypress(mover_arriba, "w")
+ventana.onkeypress(mover_abajo, "s")
+
+# Bucle principal del juego
+while True:
+    ventana.update()
+
+    # Movimiento de la pelota
+    pelota.setx(pelota.xcor() + pelota.dx)
+    pelota.sety(pelota.ycor() + pelota.dy)
+
+    # Rebote en las paredes superiores e inferiores
+    if pelota.ycor() > 290:
+        pelota.sety(290)
+        pelota.dy *= -1
+
+    if pelota.ycor() < -290:
+        pelota.sety(-290)
+        pelota.dy *= -1
+
+    # Rebote en las raquetas
+    if (pelota.dx > 0) and (350 > pelota.xcor() > 340) and (oponente.ycor() + 50 > pelota.ycor() > oponente.ycor() - 50):
+        pelota.setx(340)
+        pelota.dx *= -1
+
+    if (pelota.dx < 0) and (-350 < pelota.xcor() < -340) and (jugador.ycor() + 50 > pelota.ycor() > jugador.ycor() - 50):
+        pelota.setx(-340)
+        pelota.dx *= -1
+
+    # Movimiento del oponente
+    if oponente.ycor() < pelota.ycor() and abs(oponente.ycor() - pelota.ycor()) > 10:
+        oponente.sety(oponente.ycor() + 0.3)
+    elif oponente.ycor() > pelota.ycor() and abs(oponente.ycor() - pelota.ycor()) > 10:
+        oponente.sety(oponente.ycor() - 0.3)
